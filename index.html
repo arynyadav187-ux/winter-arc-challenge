@@ -22,6 +22,113 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <style>
+    /* ==========================================
+   COMPLETE MOBILE RESPONSIVE FIXES
+   ========================================== */
+
+@media (max-width: 768px) {
+  /* 1. Overall App Spacing */
+  .app-container {
+    padding: 16px 10px !important;
+  }
+
+  .glass-card {
+    padding: 20px 14px !important;
+    border-radius: 16px !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* 2. Page 1 Title & Countdown Adjustments */
+  .glowing-title {
+    font-size: 2.2rem !important;
+  }
+
+  .sub-glow {
+    font-size: 0.8rem !important;
+    letter-spacing: 2px !important;
+  }
+
+  .timer-container {
+    gap: 8px !important;
+    margin: 20px 0 !important;
+  }
+
+  .timer-box {
+    padding: 10px 8px !important;
+    min-width: 65px !important;
+    border-radius: 12px !important;
+  }
+
+  .timer-val {
+    font-size: 1.4rem !important;
+  }
+
+  .timer-label {
+    font-size: 0.65rem !important;
+  }
+
+  /* 3. HABIT & MOOD TABLE MOBILE FIX (Fixed Sticky Column + Scroll) */
+  .table-container {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+    border-radius: 12px !important;
+    margin-bottom: 20px !important;
+  }
+
+  table {
+    width: max-content !important;
+    min-width: 100% !important;
+  }
+
+  /* Keep Rule names contained on mobile */
+  th.habit-col, td.habit-cell {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 3 !important;
+    background: #0f172a !important; /* Non-transparent dark slate background so text behind doesn't show */
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    font-size: 0.75rem !important;
+    padding: 8px 6px !important;
+  }
+
+  /* Compact date cells so all 90 days fit neatly in horizontal scroll */
+  .day-cell, th:not(.habit-col) {
+    min-width: 36px !important;
+    max-width: 40px !important;
+    padding: 6px 2px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* 4. Chart Canvas Mobile Container */
+  .chart-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    height: 220px !important;
+    margin-top: 16px !important;
+  }
+
+  /* 5. Onboarding & Forms */
+  .form-group input, 
+  .form-group textarea, 
+  .form-group select {
+    padding: 12px 14px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .dev-section {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .social-btn-group {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
     :root {
       --bg-dark: #030712;
       --card-bg: rgba(15, 23, 42, 0.85);
@@ -489,7 +596,7 @@
           </table>
         </div>
 
-        <div style="margin-top: 24px; height: 260px;">
+        <div class="chart-wrapper">
           <canvas id="moodChart"></canvas>
         </div>
       </div>
