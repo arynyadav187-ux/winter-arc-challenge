@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Winter Arc Challenge | 90-Day Transformation</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #030712;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --card-border: rgba(56, 189, 248, 0.15);
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --aurora-green: #34d399;
+      --accent-purple: #818cf8;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
+      --gold: #fbbf24;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Snowfall Canvas */
+    #snowCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .app-container {
+      position: relative;
+      z-index: 2;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 36px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      margin-bottom: 28px;
+    }
+
+    /* Titles & Headlines */
+    .glowing-title {
+      font-size: 3.5rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      background: linear-gradient(135deg, #38bdf8 0%, #34d399 50%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+      margin-bottom: 6px;
+      letter-spacing: -1px;
+    }
+
+    .sub-glow {
+      text-align: center;
+      color: var(--aurora-green);
+      font-weight: 700;
+      letter-spacing: 4px;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+
+    .intro-text {
+      color: var(--text-muted);
+      line-height: 1.8;
+      font-size: 1.05rem;
+      text-align: center;
+      max-width: 850px;
+      margin: 0 auto 32px auto;
+    }
+
+    /* Countdown Timer */
+    .timer-container {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 28px 0 36px 0;
+    }
+
+    .timer-box {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--card-border);
+      padding: 16px 24px;
+      border-radius: 16px;
+      text-align: center;
+      min-width: 90px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .timer-val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .timer-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* AI Quote Box */
+    .ai-quote-box {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(52, 211, 153, 0.08) 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 18px 24px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .ai-quote-box i { font-size: 1.6rem; color: var(--aurora-green); }
+
+    /* Form Controls */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+    input, textarea, select {
+      width: 100%;
+      background: rgba(3, 7, 18, 0.9);
+      border: 1px solid var(--card-border);
+      padding: 14px 18px;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus { border-color: var(--primary); }
+
+    button {
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary { background: var(--primary); color: #030712; font-weight: 700; }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+    .btn-google {
+      background: #ffffff; color: #0f172a; width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      font-weight: 600; padding: 14px; border-radius: 12px;
+    }
+
+    .center-card { max-width: 500px; margin: 40px auto; text-align: center; }
+
+    /* Tracker Tables */
+    .table-container { overflow-x: auto; margin-bottom: 24px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 750px; }
+    th, td { border: 1px solid var(--card-border); padding: 10px; text-align: center; }
+    
+    th.habit-col, td.habit-cell {
+      text-align: left; min-width: 220px;
+      background: rgba(15, 23, 42, 0.95);
+      position: sticky; left: 0; z-index: 2;
+      font-weight: 600;
+    }
+
+    .day-cell { cursor: pointer; transition: background 0.2s; }
+    .day-cell.locked { cursor: not-allowed; opacity: 0.35; }
+    .day-cell.active-today { background: rgba(56, 189, 248, 0.2); border: 1px solid var(--primary); }
+    .day-cell.completed { background: rgba(52, 211, 153, 0.3); color: var(--aurora-green); font-weight: bold; }
+
+    .hidden { display: none !important; }
+
+    /* Certificate Banner */
+    .cert-banner {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(56, 189, 248, 0.12) 100%);
+      border: 1px solid var(--gold);
+      border-radius: 16px;
+      padding: 20px 26px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .cert-banner i { font-size: 2.4rem; color: var(--gold); }
+
+    /* Photo Progress Collage Grid */
+    .collage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .collage-item {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      position: relative;
+      background: rgba(3, 7, 18, 0.6);
+    }
+
+    .collage-item img { width: 100%; height: 100%; object-fit: cover; }
+    .collage-day-tag {
+      position: absolute; bottom: 4px; left: 4px;
+      background: rgba(0, 0, 0, 0.75); padding: 2px 6px;
+      border-radius: 4px; font-size: 0.65rem; color: var(--text-main);
+    }
+
+    /* Star Rating */
+    .star-rating {
+      display: flex; gap: 8px; font-size: 1.5rem; color: var(--gold); cursor: pointer; margin-bottom: 12px;
+    }
+
+    /* Developer Section Layout */
+    .dev-section {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 28px;
+    }
+
+    @media (max-width: 900px) {
+      .dev-section { grid-template-columns: 1fr; }
+    }
+
+    .social-btn-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      text-decoration: none;
+      border: 1px solid var(--card-border);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .social-btn:hover { background: rgba(56, 189, 248, 0.15); border-color: var(--primary); color: var(--primary); }
+
+    .add-task-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    /* Site Footer */
+    .site-footer {
+      text-align: center;
+      padding: 24px 0;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="snowCanvas"></canvas>
+
+  <div class="app-container">
+
+    <!-- PAGE 1: LANDING PAGE -->
+    <div id="page1" class="glass-card" style="text-align: center; margin-top: 20px;">
+      <h1 class="glowing-title">Winter Arc</h1>
+      <div class="sub-glow">1 OCT - 31 DEC • 90-DAY TRANSFORMATION</div>
+
+      <p class="intro-text">
+        The Winter Arc Challenge is a 90-day self-improvement sprint that runs through the coldest, darkest months of the year, from October 1st through December 31st. Pick your non-negotiable daily rules and lock in while everyone else coasts through the holidays.
+      </p>
+
+      <!-- Countdown Timer -->
+      <div class="timer-container">
+        <div class="timer-box"><div class="timer-val" id="days">00</div><div class="timer-label">Days</div></div>
+        <div class="timer-box"><div class="timer-val" id="hours">00</div><div class="timer-label">Hours</div></div>
+        <div class="timer-box"><div class="timer-val" id="mins">00</div><div class="timer-label">Mins</div></div>
+        <div class="timer-box"><div class="timer-val" id="secs">00</div><div class="timer-label">Secs</div></div>
+      </div>
+
+      <button class="btn-primary" onclick="goToPage(2)" style="font-size: 1.1rem; padding: 16px 44px;">Continue and Login</button>
+    </div>
+
+    <!-- PAGE 2: AUTHENTICATION -->
+    <div id="page2" class="glass-card center-card hidden">
+      <h2>Account Access</h2>
+      <p class="intro-text" style="font-size: 0.9rem; margin-bottom: 24px;">Sign in to unlock your daily protocol</p>
+
+      <button class="btn-google" onclick="handleGoogleLogin()">
+        <i class="fa-brands fa-google" style="color: #ea4335;"></i>
+        Continue with Google
+      </button>
+
+      <div style="margin: 20px 0; color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px;">OR WITH EMAIL</div>
+
+      <div class="form-group">
+        <input type="email" id="authEmail" placeholder="Email address">
+        <input type="password" id="authPassword" placeholder="Password">
+      </div>
+
+      <button class="btn-primary" onclick="handleEmailAuth()" style="width: 100%;">Log In / Sign Up</button>
+      <div id="authError" style="color: var(--danger); font-size: 0.85rem; margin-top: 12px; display: none;"></div>
+    </div>
+
+    <!-- PAGE 3: USER ONBOARDING -->
+    <div id="page3" class="glass-card center-card hidden">
+      <h2>Set Up Profile</h2>
+      <p class="intro-text" style="font-size: 0.9rem; margin-bottom: 24px;">Configure your profile for tracking</p>
+
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="inputName" placeholder="Your Full Name">
+      </div>
+
+      <div class="form-group">
+        <label>Age</label>
+        <input type="number" id="inputAge" placeholder="Your Age">
+      </div>
+
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="inputLocation" placeholder="City / Country">
+      </div>
+
+      <div class="form-group">
+        <label>Reason for Winter Arc</label>
+        <textarea id="inputReason" rows="3" placeholder="What is your main goal for this 90-day arc?"></textarea>
+      </div>
+
+      <button class="btn-primary" onclick="saveUserOnboarding()" style="width: 100%;">Launch Dashboard</button>
+    </div>
+
+    <!-- PAGE 4: MAIN DASHBOARD -->
+    <div id="page4" class="hidden">
+      
+      <!-- User Profile Header -->
+      <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <h2 style="font-size: 1.6rem;">Welcome back, <span id="dashName">User</span> ⚡</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+            Age: <span id="dashAge">--</span> | Location: <span id="dashLoc">--</span>
+          </p>
+          <p style="color: var(--aurora-green); font-size: 0.85rem; margin-top: 4px;">
+            <i class="fa-solid fa-bullseye"></i> Goal: <span id="dashReason">--</span>
+          </p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <!-- AI Streak Widget -->
+          <div style="background: rgba(3, 7, 18, 0.8); border: 1px solid var(--card-border); padding: 10px 18px; border-radius: 12px; text-align: center;">
+            <div style="color: var(--gold); font-weight: 800; font-size: 1.25rem;" id="streakCount">0 Days</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">CURRENT STREAK</div>
+          </div>
+          <button onclick="handleLogout()" style="background: transparent; border: 1px solid var(--danger); color: var(--danger);">Logout</button>
+        </div>
+      </div>
+
+      <!-- AI Motivational Quote -->
+      <div class="ai-quote-box">
+        <i class="fa-solid fa-brain"></i>
+        <div>
+          <strong style="color: var(--primary); font-size: 0.85rem;">AI DAILY DISCIPLINE ADVISOR</strong>
+          <p id="aiQuoteText" style="font-size: 0.95rem; color: var(--text-main); margin-top: 2px;">
+            "Discipline is choosing between what you want now and what you want most."
+          </p>
+        </div>
+      </div>
+
+      <!-- Certificate Banner -->
+      <div class="cert-banner">
+        <i class="fa-solid fa-award"></i>
+        <div>
+          <strong style="color: var(--gold); font-size: 1rem;">Winter Arc Official Certificate</strong>
+          <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 2px;">
+            Maintain daily logs through Dec 31st to auto-generate your personalized <strong>Winter Arc Completion Certificate</strong> and 90-Day Progress Collage!
+          </p>
+        </div>
+      </div>
+
+      <!-- HABIT TRACKER SECTION -->
+      <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <h3><i class="fa-solid fa-list-check" style="color: var(--primary);"></i> Habit Tracker (1 Oct - 31 Dec)</h3>
+          <span style="font-size: 0.8rem; color: var(--aurora-green);"><i class="fa-solid fa-lock-open"></i> Live Same-Day Editing Active</span>
+        </div>
+
+        <div class="add-task-bar">
+          <input type="text" id="newTaskInput" placeholder="Add custom rule (e.g., Cold Shower, Read 10 Pages)...">
+          <button class="btn-primary" onclick="addCustomTask()" style="white-space: nowrap;">+ Add Rule</button>
+        </div>
+
+        <div class="table-container">
+          <table id="habitTable">
+            <thead>
+              <tr id="habitTableHeader">
+                <th class="habit-col">Protocol Rule</th>
+                <!-- Days populated dynamically -->
+              </tr>
+            </thead>
+            <tbody id="habitTableBody">
+              <!-- Habit rows populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MOOD TRACKER & CHART SECTION -->
+      <div class="glass-card">
+        <h3><i class="fa-solid fa-face-smile" style="color: var(--accent-purple);"></i> Mood & Mental Energy State</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Log your state daily to visualize your trajectory.</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr id="moodTableHeader">
+                <th class="habit-col">Energy Level</th>
+              </tr>
+            </thead>
+            <tbody id="moodTableBody">
+              <!-- Mood rows populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: 24px; height: 260px;">
+          <canvas id="moodChart"></canvas>
+        </div>
+      </div>
+
+      <!-- DAILY JOURNAL & PHOTO PROGRESS COLLAGE -->
+      <div class="glass-card">
+        <h3><i class="fa-solid fa-camera" style="color: var(--aurora-green);"></i> Daily Photo Upload & Journal</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+          Upload 1 photo daily. Your photos compile automatically into a 90-Day Transformation Collage!
+        </p>
+
+        <div class="form-group">
+          <textarea id="dailyNoteText" rows="3" placeholder="Write today's key wins or reflections..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Attach Today's Progress Photo</label>
+          <input type="file" id="dailyNoteImg" accept="image/*">
+        </div>
+        <button class="btn-primary" onclick="saveDailyNote()">Post Daily Entry</button>
+
+        <h4 style="margin-top: 28px; font-size: 1rem; color: var(--primary);">Your 90-Day Progress Collage Grid</h4>
+        <div class="collage-grid" id="collageGrid">
+          <!-- Dynamically populated photo tiles -->
+        </div>
+      </div>
+
+      <!-- ABOUT DEVELOPER & REVIEWS -->
+      <div class="dev-section">
+        
+        <!-- About Developer -->
+        <div class="glass-card">
+          <h3><i class="fa-solid fa-user-code" style="color: var(--primary);"></i> About the Developer</h3>
+          <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 12px; line-height: 1.7;">
+            Hi, I’m <strong>Aryan</strong>, a student and aspiring AI/software developer who enjoys learning by building real-world projects.
+          </p>
+          <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 10px; line-height: 1.7;">
+            I’m currently developing my skills in Python, data structures and algorithms, web development, AI/ML, and software engineering. I believe the best way to learn is to turn ideas into working projects, experiment with new technologies, and continuously improve.
+          </p>
+          <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 10px; line-height: 1.7;">
+            This website is one of the projects I built as part of that journey. My goal is to create useful, practical products while strengthening my understanding of programming, APIs, databases, and modern web technologies.
+          </p>
+
+          <h4 style="font-size: 0.9rem; margin-top: 22px; color: var(--text-main);">Connect & Follow:</h4>
+          <div class="social-btn-group">
+            <a href="https://github.com/arynyadav187-ux" target="_blank" class="social-btn"><i class="fa-brands fa-github"></i> GitHub</a>
+            <a href="https://www.linkedin.com/in/aryan-yadav" target="_blank" class="social-btn"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>
+            <a href="https://www.instagram.com/_aryan_1729?stkn=MXNhaGxnamszcWFnZQ==" target="_blank" class="social-btn"><i class="fa-brands fa-instagram"></i> Instagram</a>
+            <a href="mailto:arynyadav187@gmail.com" class="social-btn"><i class="fa-solid fa-envelope"></i> Email</a>
+          </div>
+        </div>
+
+        <!-- Feedback Form -->
+        <div class="glass-card">
+          <h3><i class="fa-solid fa-star" style="color: var(--gold);"></i> Feedback & Review</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 14px;">Rate your experience with the Winter Arc Tracker:</p>
+
+          <div class="star-rating" id="starContainer">
+            <i class="fa-solid fa-star" onclick="setRating(1)"></i>
+            <i class="fa-solid fa-star" onclick="setRating(2)"></i>
+            <i class="fa-solid fa-star" onclick="setRating(3)"></i>
+            <i class="fa-solid fa-star" onclick="setRating(4)"></i>
+            <i class="fa-solid fa-star" onclick="setRating(5)"></i>
+          </div>
+
+          <div class="form-group">
+            <textarea id="commentText" rows="4" placeholder="Write your feedback or suggested features..."></textarea>
+          </div>
+          <button class="btn-primary" onclick="submitReview()" style="width: 100%;">Submit Feedback</button>
+          <div id="commentStatus" style="font-size: 0.85rem; color: var(--aurora-green); margin-top: 12px;"></div>
+        </div>
+
+      </div>
+
+      <!-- Site Footer -->
+      <footer class="site-footer">
+        <p>&copy; 2026 Winter Arc Challenge • Designed & Built by <strong>Aryan Yadav</strong></p>
+      </footer>
+
+    </div>
+
+  </div>
+
+  <script>
+    // FIREBASE CONFIGURATION
+    const firebaseConfig = {
+      apiKey: "AIzaSyB64Rrkg_2cJshG0p-UcovARG71sXLWS-A",
+      authDomain: "winterarcplanner.firebaseapp.com",
+      projectId: "winterarcplanner",
+      storageBucket: "winterarcplanner.firebasestorage.app",
+      messagingSenderId: "878912905504",
+      appId: "1:878912905504:web:9c1ff0e5eef84fc21e3745"
+    };
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+    let userProfile = null;
+    let userRating = 5;
+    let moodChartInstance = null;
+
+    // AI Motivational Quotes
+    const aiQuotes = [
+      "\"Discipline is choosing between what you want now and what you want most.\"",
+      "\"The Winter Arc isn't about comfort; it's about building an unshakeable identity.\"",
+      "\"Small daily executions compounded over 90 days create life-changing transformations.\"",
+      "\"Execute quietly. Let your results produce the noise.\""
+    ];
+
+    // NAVIGATION
+    function goToPage(pageNum) {
+      document.getElementById('page1').classList.add('hidden');
+      document.getElementById('page2').classList.add('hidden');
+      document.getElementById('page3').classList.add('hidden');
+      document.getElementById('page4').classList.add('hidden');
+
+      document.getElementById(`page${pageNum}`).classList.remove('hidden');
+    }
+
+    // COUNTDOWN TIMER TO OCT 1
+    function updateCountdown() {
+      const now = new Date();
+      let targetYear = now.getFullYear();
+      let target = new Date(`October 1, ${targetYear} 00:00:00`);
+
+      if (now > target) {
+        target = new Date(`October 1, ${targetYear + 1} 00:00:00`);
+      }
+
+      const diff = target - now;
+
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / 1000 / 60) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+
+      document.getElementById('days').innerText = String(d).padStart(2, '0');
+      document.getElementById('hours').innerText = String(h).padStart(2, '0');
+      document.getElementById('mins').innerText = String(m).padStart(2, '0');
+      document.getElementById('secs').innerText = String(s).padStart(2, '0');
+    }
+
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // AUTH OBSERVER
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        currentUser = user;
+        const doc = await db.collection('users').doc(user.uid).get();
+
+        if (doc.exists) {
+          userProfile = doc.data();
+          showDashboard();
+        } else {
+          goToPage(3);
+        }
+      } else {
+        currentUser = null;
+        userProfile = null;
+      }
+    });
+
+    function handleGoogleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch(err => {
+        document.getElementById('authError').innerText = err.message;
+        document.getElementById('authError').style.display = 'block';
+      });
+    }
+
+    function handleEmailAuth() {
+      const email = document.getElementById('authEmail').value.trim();
+      const pass = document.getElementById('authPassword').value.trim();
+
+      auth.signInWithEmailAndPassword(email, pass).catch(err => {
+        if (err.code === 'auth/user-not-found') {
+          auth.createUserWithEmailAndPassword(email, pass);
+        } else {
+          document.getElementById('authError').innerText = err.message;
+          document.getElementById('authError').style.display = 'block';
+        }
+      });
+    }
+
+    function handleLogout() {
+      auth.signOut();
+      goToPage(1);
+    }
+
+    async function saveUserOnboarding() {
+      const name = document.getElementById('inputName').value.trim();
+      const age = document.getElementById('inputAge').value.trim();
+      const location = document.getElementById('inputLocation').value.trim();
+      const reason = document.getElementById('inputReason').value.trim();
+
+      if (!name || !age || !location) {
+        alert("Please complete the required fields.");
+        return;
+      }
+
+      userProfile = { name, age, location, reason };
+      await db.collection('users').doc(currentUser.uid).set(userProfile);
+      showDashboard();
+    }
+
+    function showDashboard() {
+      document.getElementById('dashName').innerText = userProfile.name;
+      document.getElementById('dashAge').innerText = userProfile.age;
+      document.getElementById('dashLoc').innerText = userProfile.location;
+      document.getElementById('dashReason').innerText = userProfile.reason || 'Personal Growth';
+
+      const randomQuote = aiQuotes[Math.floor(Math.random() * aiQuotes.length)];
+      document.getElementById('aiQuoteText').innerText = randomQuote;
+
+      buildTrackerTables();
+      initMoodChart();
+      loadNotesAndCollage();
+      goToPage(4);
+    }
+
+    function buildTrackerTables() {
+      const now = new Date();
+      const currentMonth = now.getMonth(); 
+      const currentDay = now.getDate();
+
+      const habitHeader = document.getElementById('habitTableHeader');
+      const moodHeader = document.getElementById('moodTableHeader');
+
+      habitHeader.innerHTML = '<th class="habit-col">Protocol Rule</th>';
+      moodHeader.innerHTML = '<th class="habit-col">Energy Level</th>';
+
+      for (let i = 1; i <= 31; i++) {
+        habitHeader.innerHTML += `<th>${i}</th>`;
+        moodHeader.innerHTML += `<th>${i}</th>`;
+      }
+
+      const defaultHabits = [
+        "Wake up before 6:00 AM",
+        "45+ Mins Workout / Training",
+        "Clean Diet (No Cheat Meals)",
+        "Read 10 Pages / Skill Work"
+      ];
+
+      const habitBody = document.getElementById('habitTableBody');
+      habitBody.innerHTML = '';
+
+      defaultHabits.forEach((habit) => {
+        let rowHtml = `<tr><td class="habit-cell">${habit}</td>`;
+        for (let day = 1; day <= 31; day++) {
+          const isToday = (currentMonth >= 9 && day === currentDay);
+          if (isToday) {
+            rowHtml += `<td class="day-cell active-today" onclick="toggleHabitCell(this)">✓</td>`;
+          } else {
+            rowHtml += `<td class="day-cell locked" onclick="showLockedNotice(${day})">🔒</td>`;
+          }
+        }
+        rowHtml += `</tr>`;
+        habitBody.innerHTML += rowHtml;
+      });
+
+      const moodBody = document.getElementById('moodTableBody');
+      moodBody.innerHTML = '';
+      const moodStates = ["Apex / Focused ⚡", "Steady / Disciplined 🧘", "Tired / Resisting 🌧️"];
+
+      moodStates.forEach((state) => {
+        let rowHtml = `<tr><td class="habit-cell">${state}</td>`;
+        for (let day = 1; day <= 31; day++) {
+          const isToday = (currentMonth >= 9 && day === currentDay);
+          if (isToday) {
+            rowHtml += `<td class="day-cell active-today" onclick="logMood(this)">⚡</td>`;
+          } else {
+            rowHtml += `<td class="day-cell locked" onclick="showLockedNotice(${day})">🔒</td>`;
+          }
+        }
+        rowHtml += `</tr>`;
+        moodBody.innerHTML += rowHtml;
+      });
+    }
+
+    function toggleHabitCell(cell) {
+      cell.classList.toggle('completed');
+      if (cell.classList.contains('completed')) {
+        cell.innerText = '✓';
+      }
+    }
+
+    function logMood(cell) {
+      cell.classList.toggle('completed');
+    }
+
+    function showLockedNotice(day) {
+      alert(`🔒 Day ${day} is locked. You can only log entries for today's live date once October 1st arrives!`);
+    }
+
+    function addCustomTask() {
+      const input = document.getElementById('newTaskInput');
+      const taskText = input.value.trim();
+      if (!taskText) return;
+
+      const now = new Date();
+      const currentDay = now.getDate();
+
+      let rowHtml = `<tr><td class="habit-cell">${taskText}</td>`;
+      for (let day = 1; day <= 31; day++) {
+        const isToday = (day === currentDay);
+        if (isToday) {
+          rowHtml += `<td class="day-cell active-today" onclick="toggleHabitCell(this)">✓</td>`;
+        } else {
+          rowHtml += `<td class="day-cell locked" onclick="showLockedNotice(${day})">🔒</td>`;
+        }
+      }
+      rowHtml += `</tr>`;
+
+      document.getElementById('habitTableBody').innerHTML += rowHtml;
+      input.value = '';
+    }
+
+    function initMoodChart() {
+      const ctx = document.getElementById('moodChart').getContext('2d');
+      if (moodChartInstance) moodChartInstance.destroy();
+
+      moodChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+          datasets: [{
+            label: 'Mental Energy Trajectory',
+            data: [3, 2, 3, 3, 2, 3, 3],
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { min: 1, max: 3, grid: { color: 'rgba(255,255,255,0.05)' } },
+            x: { grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+    }
+
+    async function saveDailyNote() {
+      const text = document.getElementById('dailyNoteText').value.trim();
+      const file = document.getElementById('dailyNoteImg').files[0];
+
+      if (!text && !file) {
+        alert("Please write a note or attach a photo.");
+        return;
+      }
+
+      let imgUrl = '';
+      if (file) {
+        imgUrl = await convertBase64(file);
+      }
+
+      await db.collection('users').doc(currentUser.uid).collection('daily_notes').add({
+        text,
+        imgUrl,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      document.getElementById('dailyNoteText').value = '';
+      document.getElementById('dailyNoteImg').value = '';
+      loadNotesAndCollage();
+    }
+
+    function loadNotesAndCollage() {
+      db.collection('users').doc(currentUser.uid).collection('daily_notes')
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(snapshot => {
+          const collageGrid = document.getElementById('collageGrid');
+          collageGrid.innerHTML = '';
+          let count = 0;
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            count++;
+
+            if (data.imgUrl) {
+              const item = document.createElement('div');
+              item.className = 'collage-item';
+              item.innerHTML = `
+                <img src="${data.imgUrl}">
+                <div class="collage-day-tag">Day ${count}</div>
+              `;
+              collageGrid.appendChild(item);
+            }
+          });
+
+          document.getElementById('streakCount').innerText = `${count} Days`;
+        });
+    }
+
+    function setRating(stars) {
+      userRating = stars;
+      const icons = document.querySelectorAll('#starContainer i');
+      icons.forEach((icon, idx) => {
+        icon.style.color = idx < stars ? 'var(--gold)' : 'var(--text-muted)';
+      });
+    }
+
+    function submitReview() {
+      const comment = document.getElementById('commentText').value.trim();
+      if (comment) {
+        db.collection('user_reviews').add({
+          user: currentUser ? currentUser.uid : 'Anonymous',
+          rating: userRating,
+          review: comment,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById('commentText').value = '';
+        document.getElementById('commentStatus').innerText = 'Thank you! Your feedback has been submitted.';
+      }
+    }
+
+    function convertBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = err => reject(err);
+      });
+    }
+
+    // CANVAS SNOWFALL ANIMATION
+    const canvas = document.getElementById('snowCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    class Flake {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * -height;
+        this.size = Math.random() * 2 + 1;
+        this.speedY = Math.random() * 1.5 + 0.5;
+        this.opacity = Math.random() * 0.5 + 0.2;
+      }
+      update() {
+        this.y += this.speedY;
+        if (this.y > height) this.reset();
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(224, 242, 254, ${this.opacity})`;
+        ctx.fill();
+      }
+    }
+
+    const flakes = Array.from({ length: 75 }, () => new Flake());
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      flakes.forEach(f => { f.update(); f.draw(); });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
