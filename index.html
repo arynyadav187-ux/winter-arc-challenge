@@ -361,6 +361,7 @@
     </div>
 
     <!-- PAGE 3: USER ONBOARDING -->
+    <!-- PAGE 3: USER ONBOARDING -->
     <div id="page3" class="glass-card center-card hidden">
       <h2>Set Up Profile</h2>
       <p class="intro-text" style="font-size: 0.9rem; margin-bottom: 24px;">Configure your profile for tracking</p>
@@ -378,6 +379,14 @@
       <div class="form-group">
         <label>Location</label>
         <input type="text" id="inputLocation" placeholder="City / Country">
+      </div>
+
+      <div class="form-group">
+        <label>Daily Protocol Reminder Time</label>
+        <input type="time" id="inputNotifTime" value="20:00">
+        <small style="color: var(--text-muted); font-size: 0.75rem; text-align: left; display: block; margin-top: 4px;">
+          Set the daily time you want a push reminder to complete your habits and journal.
+        </small>
       </div>
 
       <div class="form-group">
@@ -564,6 +573,37 @@
   </div>
 
   <script>
+    async function saveUserOnboarding() {
+  const name = document.getElementById('inputName').value;
+  const age = document.getElementById('inputAge').value;
+  const location = document.getElementById('inputLocation').value;
+  const notifTime = document.getElementById('inputNotifTime').value || "20:00";
+  const reason = document.getElementById('inputReason').value;
+
+  let notifAllowed = false;
+
+  // Request browser notification permission
+  if ("Notification" in window) {
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      notifAllowed = true;
+    }
+  }
+
+  // Save to Firestore
+  const userId = firebase.auth().currentUser.uid;
+  await db.collection("users").doc(userId).set({
+    name: name,
+    age: age,
+    location: location,
+    notificationTime: notifTime,
+    notificationsEnabled: notifAllowed,
+    reason: reason
+  }, { merge: true });
+
+  // Proceed to Dashboard
+  goToPage(4);
+}
     // FIREBASE CONFIGURATION
     const firebaseConfig = {
       apiKey: "AIzaSyB64Rrkg_2cJshG0p-UcovARG71sXLWS-A",
